@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问题详情</title>
+    <style>
+        body {
+            background: url("./img/img.png");
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /*background-color: #f2f2f2;*/
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .question-details {
+            margin-bottom: 20px;
+        }
+
+        .question-details p {
+            margin: 0;
+        }
+
+        .answer-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .answer-item {
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 90px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            resize: none; /* 禁止用户调整 textarea 的大小 */
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .loading-message {
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<header style="display: flex; align-items: center;">
+    <a href="question.html" style="text-decoration: none;color: white;width: 50vh;margin-left: -100px">返回</a>
+    <h1 style="color: white;width: 50vh;margin-left: 250px">问题详情</h1>
+</header>
+
+
+<main>
+    <div class="question-details">
+        <h1 id="questionTitle"></h1>
+        <p id="questionUser"></p>
+        <p id="questionText"></p>
+        <p id="questionCreateTime"></p>
+        <p id="questionLikes"></p>
+        <button id="likeButton">点赞</button>
+    </div>
+
+    <h2>回答列表</h2>
+    <ul id="answerList" class="answer-list">
+        <!-- 回答列表将在脚本中动态填充 -->
+    </ul>
+
+    <h2>我要回答</h2>
+    <textarea id="answerInput" rows="4" placeholder="输入你的回答"></textarea>
+    <button id="submitAnswerButton">提交回答</button>
+
+    <div id="loadingMessage" class="loading-message">到底了喔~</div>
+</main>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+    let questionDTO = null;
+    document.addEventListener('DOMContentLoaded', function () {
+        getQuestionDetails();
+        getAnswerList();
+    });
+
+    function getQuestionDetails() {
+        var currentUrl = window.location.href;
+        var url = new URL(currentUrl);
+
+        var questionId = url.searchParams.get("questionId");
+        // 使用 fetch 进行异步请求
+        fetch('/question?method=questionDetails&questionId=' + questionId)
+            .then(response => response.json())
+            .then(data => {
+                // 数据获取成功后，填充问题详情
+                questionDTO = data;
+                populateQuestionDetails(data);
+            })
+            .catch(error => {
+                console.error('Error fetching question details:', error);
+            });
+    }
+
+    function populateQuestionDetails(questionDetails) {
+        document.getElementById('questionTitle').textContent = questionDetails.title;
+        document.getElementById('questionUser').textContent = '提问者: ' + questionDetails.username;
+        document.getElementById('questionText').textContent = '问题内容: ' + questionDetails.text;
+        document.getElementById('questionCreateTime').textContent = '创建时间: ' + questionDetails.createTime;
+        document.getElementById('questionLikes').textContent = '点赞数量: ' + questionDetails.likes;
+
+        // 隐藏加载中提示
+        document.getElementById('loadingMessage').style.display = 'none';
+    }
+
+    $(function () {
+        $('#likeButton').click(function () {
+            let postUrl = "/like?method=addLike";
+            $.post(
+                postUrl,
+                {
+                    "targetId": questionDTO.questionId,
+                    "type": "question"
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        questionDTO.likes = questionDTO.likes + 1;
+                        document.getElementById('questionLikes').textContent = '点赞数量: ' + questionDTO.likes;
+                    }
+                }
+            )
+        })
+    })
+
+    $(function () {
+        $('#submitAnswerButton').click(function () {
+            var currentUrl = window.location.href;
+            var url = new URL(currentUrl);
+            var questionId = url.searchParams.get("questionId");
+
+            let answerInput = $('#answerInput').val();
+            let postUrl = "/answer?method=add";
+            $.post(
+                postUrl,
+                {
+                    "questionId": questionId,
+                    "text": answerInput
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "/questionDetails.html?questionId=" + questionId;
+                    }
+                }
+            )
+        })
+    })
+
+    // 模拟从后端获取回答列表的函数
+    function getAnswerList() {
+        var currentUrl = window.location.href;
+        var url = new URL(currentUrl);
+
+        // 获取从 URL 参数中传递的 questionId
+        var questionId = url.searchParams.get("questionId");
+
+        // 使用 fetch 进行异步请求，替换为你的后端 API 地址
+        fetch('/answer?method=getAnswerList&questionId=' + questionId)
+            .then(response => response.json())
+            .then(data => {
+                // 数据获取成功后，填充回答列表
+                renderAnswerList(data);
+            })
+            .catch(error => {
+                console.error('Error fetching answer list:', error);
+            });
+    }
+
+    // 渲染回答列表
+    function renderAnswerList(answers) {
+        var answerListContainer = document.getElementById('answerList');
+
+        answers.forEach(function (answer) {
+            var answerItem = document.createElement('li');
+            answerItem.classList.add('answer-item');
+
+            var answerInfo = document.createElement('div');
+            answerInfo.textContent = '回答者: ' + answer.username + ' | 时间: ' + answer.createTime + ' | 点赞: ' + answer.likes;
+
+            var answerText = document.createElement('p');
+            answerText.textContent = answer.text;
+
+            var likeButton = document.createElement('button');
+            likeButton.textContent = '点赞';
+            likeButton.addEventListener('click', function () {
+                let postUrl = "/like?method=addLike";
+                $.post(
+                    postUrl,
+                    {
+                        "targetId": answer.answerId,
+                        "type": "answer"
+                    },
+                    function (result) {
+                        let json = JSON.parse(result);
+                        alert(json.mess);
+                        if (json.ok == true) {
+                            answer.likes = answer.likes + 1;
+                            answerInfo.textContent = '回答者: ' + answer.username + ' | 时间: ' + answer.createTime + ' | 点赞: ' + answer.likes;
+                        }
+                    }
+                )
+            });
+
+            answerItem.appendChild(answerInfo);
+            answerItem.appendChild(answerText);
+            answerItem.appendChild(likeButton);
+
+            answerListContainer.appendChild(answerItem);
+        });
+    }
+</script>
+
+</body>
+</html>

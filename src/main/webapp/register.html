@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册页面</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url("./img/img.png");
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        div {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #555;
+        }
+
+        input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: calc(100% - 22px);
+        }
+
+        p {
+            margin-top: 20px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <h2>用户注册</h2>
+    <label for="username">用户名:</label>
+    <input type="text" id="username" name="username" required>
+
+    <label for="password">密码:</label>
+    <input type="password" id="password" name="password" required>
+
+    <label for="confirmPassword">确认密码:</label>
+    <input type="password" id="confirmPassword" name="confirmPassword" required>
+
+    <label for="phone">手机号:</label>
+    <input type="text" id="phone" name="phone" required>
+
+    <label for="email">邮箱:</label>
+    <input type="email" id="email" name="email" required>
+
+    <button id="register">注册</button>
+
+    <p>已有账户？<a href="/login.html">登录</a></p>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('#register').click(function () {
+            let username = $("#username").val();
+            let password = $("#password").val();
+            let confirmPassword = $("#confirmPassword").val();
+            let phone = $("#phone").val();
+            let email = $("#email").val();
+
+            // 非空判断
+            if (!username || !password || !confirmPassword || !phone || !email) {
+                alert("请填写所有字段。");
+                return false;
+            }
+
+            // 密码一致性检查
+            if (password !== confirmPassword) {
+                alert("密码和确认密码必须一致。");
+                return false;
+            }
+
+            let url = "/user?method=register";
+            $.post(
+                url,
+                {
+                    "username": username,
+                    "password": password,
+                    "phone": phone,
+                    "email": email
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "login.html";
+                    }
+                }
+            )
+        })
+    })
+</script>
+</body>
+</html>

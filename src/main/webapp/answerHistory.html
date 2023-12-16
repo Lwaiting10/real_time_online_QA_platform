@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>回答历史</title>
+    <link rel="stylesheet" href="css/answerHistory.css">
+</head>
+<body>
+
+<header>
+    <h1>回答历史</h1>
+</header>
+<a href="userInfo.jsp" class="back-link">返回个人信息</a>
+<div class="answer-container" id="answerContainer">
+    <!-- JavaScript 会在这里动态生成回答历史 -->
+</div>
+
+</body>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    // 页面加载完成后执行
+    $(document).ready(function () {
+        // 使用 Ajax 异步获取回答历史数据
+        $.ajax({
+            url: '/answer?method=getUserAnswerHistory',
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                displayAnswers(data);
+            },
+            error: function () {
+                alert('获取回答历史失败');
+            }
+        });
+
+        function displayAnswers(data) {
+            // 找到回答历史容器
+            var answerContainer = document.getElementById('answerContainer');
+
+            answerContainer.innerHTML = '';
+            // 遍历问题
+            data.forEach(function (question) {
+                // 创建问题元素
+                var questionElement = createQuestionElement(question)[0];  // 添加 [0] 进行转换
+
+                // 将问题元素添加到回答历史容器
+                answerContainer.appendChild(questionElement);
+            });
+        }
+
+        // 创建问题元素
+        function createQuestionElement(question) {
+            // 创建问题的主元素
+            var questionElement = $('<div class="answer">' +
+                '<h3>' + question.title + '</h3>');
+
+            // 遍历回答集合
+            question.answer.forEach(function (answer) {
+                // 创建回答元素
+                var answerElement = createAnswerElement(answer);
+
+                // 将回答元素添加到问题元素
+                questionElement.append(answerElement);
+            });
+
+            // 返回问题元素
+            return questionElement;
+        }
+
+        // 创建回答元素
+        function createAnswerElement(answer) {
+            // 创建回答主元素
+            // 返回回答元素
+            return $('<div class="answer">' +
+                '<div class="answer-content">' +
+                '<p>' + answer.text + '</p>' +
+                '</div>' +
+                '<div class="answer-metadata">' +
+                '<div class="answer-time">回答时间: ' + answer.createTime + '</div>' +
+                '<div class="answer-likes">' +
+                '<span class="like-icon">&#x2665;</span>' +
+                '<span>点赞数: ' + answer.likes + '</span>' +
+                '</div>' +
+                '<button class="delete-button" onclick="confirmDelete(\'' + answer.answerId + '\')">删除</button>' +
+                '</div>' +
+                '</div>');
+        }
+    });
+
+    // 删除确认
+    function confirmDelete(answerId) {
+
+        if (confirm("确定要删除这个回答吗？")) {
+            let url = "/answer?method=delete";
+            $.post(
+                url,
+                {
+                    "answerId": answerId
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "/answerHistory.html";
+                    }
+                }
+            )
+        }
+    }
+</script>
+</html>

@@ -1,0 +1,170 @@
+<!-- user_management.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #search-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #user-table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .status-frozen {
+            color: red;
+        }
+
+        .status-normal {
+            color: green;
+        }
+
+        .action-button {
+            cursor: pointer;
+            padding: 5px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+<h2>用户管理</h2>
+
+<div id="search-container">
+    <label for="search-input">搜索用户名：</label>
+    <input type="text" id="search-input" oninput="searchUser()">
+</div>
+
+<table id="user-table">
+    <thead>
+    <tr>
+        <th>用户名</th>
+        <th>电话</th>
+        <th>邮箱</th>
+        <th>状态</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="user-list">
+    <!-- 用户信息将动态插入到这里 -->
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    // 页面加载时异步获取所有用户信息
+    $(document).ready(function () {
+        getAllUsers();
+    });
+
+    function getAllUsers() {
+        $.ajax({
+            url: '/user?method=getAllUsers',
+            type: 'GET',
+            dataType: 'json',
+            success: function (userData) {
+                displayUsers(userData);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error('Error fetching user data:', textStatus);
+                console.error('Error details:', errorThrown);
+            }
+        });
+    }
+
+    function searchUser() {
+        const searchInput = $('#search-input');
+        const searchTerm = searchInput.val().toLowerCase();
+
+        if (searchTerm.length === 0) {
+            // 如果搜索条件为空，显示所有用户
+            getAllUsers();
+            return;
+        }
+
+        $.ajax({
+            url: '/user?method=searchUsers',
+            type: 'GET',
+            dataType: 'json',
+            data: {searchTerm: searchTerm},
+            success: function (searchResults) {
+                displayUsers(searchResults);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error('Error fetching search results:', textStatus);
+                console.error('Error details:', errorThrown);
+            }
+        });
+    }
+
+    function displayUsers(users) {
+        const userTableBody = $('#user-list');
+        userTableBody.empty();
+
+        users.forEach(user => {
+            const row = `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.phone}</td>
+                        <td>${user.email}</td>
+                        <td class="${user.status == 0 ? 'status-frozen' : 'status-normal'}">${user.status == 0 ? '冻结' : '正常'}</td>
+                        <td>
+                            <button class="action-button" onclick="toggleUserStatus(${user.status}, '${user.userId}')">
+                                ${user.status == 0 ? '解冻' : '冻结'}
+                            </button>
+                        </td>
+                    </tr>`;
+            userTableBody.append(row);
+        });
+    }
+
+    function toggleUserStatus(currentStatus, userId) {
+        let url;
+        if (currentStatus == 0) {
+            url = '/user?method=unfreezeUser';
+        }
+        if (currentStatus == 1) {
+            url = '/user?method=freezeUser';
+        }
+        $.post(
+            url,
+            {
+                "userId": userId,
+            },
+            function (result) {
+                let json = JSON.parse(result);
+                if (json.ok == true) {
+                    window.location.href = "user_management.html";
+                }else {
+                    alert(json.mess);
+                }
+            }
+        )
+    }
+</script>
+</body>
+</html>

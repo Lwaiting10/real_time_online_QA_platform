@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提问页面</title>
+    <link rel="stylesheet" href="./css/addQuestion.css">
+</head>
+<body>
+<a href="home.html">返回主页</a>
+<h2>提出问题</h2>
+<div id="box">
+    <label for="title">问题标题:</label>
+    <input type="text" id="title" name="title" required>
+
+    <label for="text">问题内容 (最多1000字):</label>
+    <div style="position: relative;">
+        <textarea id="text" name="text" rows="4" maxlength="1000" oninput="updateCharacterCount()" required></textarea>
+        <div id="characterCount" style="position: absolute; bottom: 20px; right: 8px; color: #888;"></div>
+    </div>
+
+    <label for="category">问题分类:</label>
+    <select id="category" name="category" required></select>
+
+    <button id="submit-btn">提交问题</button>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+    function updateCharacterCount() {
+        var textarea = document.getElementById('text');
+        var characterCount = document.getElementById('characterCount');
+        var remainingCharacters = 1000 - textarea.value.length;
+
+        characterCount.textContent = remainingCharacters + ' 字剩余';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // 页面加载完成后调用该方法获取分类选项
+        getCategoryOptions();
+    });
+
+    function getCategoryOptions() {
+        // 使用 fetch 进行异步请求
+        fetch('/question?method=getCategoryOptions')
+            .then(response => response.json())
+            .then(data => {
+                // 数据获取成功后，将分类选项填充到下拉框中
+                populateCategoryOptions(data);
+            })
+            .catch(error => {
+                console.error('Error fetching category options:', error);
+            });
+    }
+
+    function populateCategoryOptions(categories) {
+        var categorySelect = document.getElementById('category');
+
+        // 清空下拉框中的现有选项
+        categorySelect.innerHTML = '';
+
+        // 添加新的选项
+        categories.forEach(category => {
+            var option = document.createElement('option');
+            option.value = category.categoryId;
+            option.text = category.categoryName;
+            categorySelect.appendChild(option);
+        });
+    }
+
+    $(function () {
+        $('#submit-btn').click(function () {
+            let title = $('#title').val();
+            let text = $('#text').val();
+            let categoryId = $('#category').val();
+            let url = "/question?method=add";
+            $.post(
+                url,
+                {
+                    "title": title,
+                    "text": text,
+                    "categoryId": categoryId
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "/addQuestion.html";
+                    }
+                }
+            )
+        })
+    })
+</script>
+</body>
+</html>

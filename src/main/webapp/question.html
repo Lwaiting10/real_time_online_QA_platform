@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/question.css">
+</head>
+<body>
+<a href="home.html" style="color:white;text-decoration: none;margin-left: -1300px;margin-top: 20px">返回主页</a>
+<div style="text-align: center;margin-top: 20px">
+    <h2>看看大家都发表了哪些问题吧</h2>
+</div>
+
+<!-- 添加搜索框和分类下拉框 -->
+<div id="search-container" style="text-align: center; margin-top: 20px;">
+    <input type="text" id="searchInput" placeholder="搜索问题标题...">
+    <select id="categoryDropdown">
+        <option value="" selected>所有分类</option>
+        <!-- 根据可用分类动态添加选项 -->
+    </select>
+    <button onclick="performSearch()">搜索</button>
+</div>
+
+<div id="question-list-container">
+    <div id="question-list"></div>
+</div>
+
+</body>
+<script>
+    // 异步加载问题列表
+    function loadQuestionList() {
+        var fetchUrl = '/question?method=getPassQuestions';
+
+        // 清空问题列表容器
+        var questionListContainer = document.getElementById('question-list');
+        questionListContainer.innerHTML = '';
+
+        fetch(fetchUrl)
+            .then(response => response.json())
+            .then(data => {
+                renderQuestionList(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 异步加载分类数据
+    function loadCategoryDropdown() {
+        fetch('/question?method=getCategoryOptions') // 替换成实际的分类数据接口
+            .then(response => response.json())
+            .then(data => {
+                renderCategoryDropdown(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 渲染分类下拉框
+    function renderCategoryDropdown(categories) {
+        var categoryDropdown = document.getElementById('categoryDropdown');
+
+        // 清空下拉框
+        categoryDropdown.innerHTML = '';
+
+        // 添加“所有分类”选项
+        var allCategoriesOption = document.createElement('option');
+        allCategoriesOption.value = '';
+        allCategoriesOption.textContent = '所有分类';
+        categoryDropdown.appendChild(allCategoriesOption);
+
+        // 添加动态获取的分类选项
+        categories.forEach(function (category) {
+            var option = document.createElement('option');
+            option.value = category.categoryName;
+            option.textContent = category.categoryName;
+            categoryDropdown.appendChild(option);
+        });
+    }
+
+    // 执行基于标题和分类的搜索
+    function performSearch() {
+        var searchInput = document.getElementById('searchInput').value;
+        var categoryDropdown = document.getElementById('categoryDropdown');
+        var selectedCategory = categoryDropdown.options[categoryDropdown.selectedIndex].value;
+
+        // 清空问题列表容器
+        var questionListContainer = document.getElementById('question-list');
+        questionListContainer.innerHTML = '';
+
+        // 修改fetch URL以包含搜索参数
+        var fetchUrl = '/question?method=getPassQuestions';
+        fetchUrl += '&title=' + encodeURIComponent(searchInput);
+        fetchUrl += '&category=' + encodeURIComponent(selectedCategory);
+
+        fetch(fetchUrl)
+            .then(response => response.json())
+            .then(data => {
+                renderQuestionList(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // 渲染问题列表
+    function renderQuestionList(questions) {
+        var questionListContainer = document.getElementById('question-list');
+
+        questions.forEach(function (question) {
+            var questionBox = document.createElement('div');
+            questionBox.classList.add('question-box');
+            questionBox.addEventListener('click', function () {
+                // 点击问题框，弹出提示框显示问题的具体内容
+                // alert('问题ID: ' + question.questionId + '\n标题: ' + question.title + '\n创建时间: ' + question.createTime +
+                //     '\n提问者: ' + question.username + '\n分类: ' + question.categoryName + '\n点赞数: ' + question.likes);
+                window.location.href = "/questionDetails.html?questionId=" + question.questionId;
+            });
+
+            var titleElement = document.createElement('div');
+            titleElement.classList.add('question-title');
+            titleElement.textContent = question.title;
+
+            var usernameElement = document.createElement('div');
+            usernameElement.classList.add('question-username');
+            usernameElement.textContent = '提问者: ' + question.username;
+
+            var categoryNameElement = document.createElement('div');
+            categoryNameElement.classList.add('question-category');
+            categoryNameElement.textContent = '分类: ' + question.categoryName;
+
+            var likesElement = document.createElement('div');
+            likesElement.classList.add('question-likes');
+            likesElement.textContent = '点赞数: ' + question.likes;
+
+            var createTimeElement = document.createElement('div');
+            createTimeElement.classList.add('question-create-time');
+            createTimeElement.textContent = '创建时间: ' + question.createTime;
+
+
+            questionBox.appendChild(titleElement);
+            questionBox.appendChild(usernameElement);
+            questionBox.appendChild(categoryNameElement);
+            questionBox.appendChild(likesElement);
+            questionBox.appendChild(createTimeElement);
+
+            questionListContainer.appendChild(questionBox);
+        });
+    }
+
+    // 页面加载完成后执行
+    window.onload = function () {
+        loadQuestionList();
+        loadCategoryDropdown();
+    };
+</script>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员个人管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #change-info-container {
+            display: flex;
+            justify-content: space-between;
+            width: 600px; /* 调整容器宽度 */
+            margin-top: 50px;
+        }
+
+        #change-username-container,
+        #change-password-container {
+            width: 280px; /* 调整模块宽度 */
+            padding: 20px; /* 添加内边距 */
+            background-color: #f5f5f5; /* 添加浅色背景 */
+            border-radius: 8px; /* 添加边框圆角 */
+            margin-right: 10px; /* 添加模块之间的右侧边距 */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div id="change-info-container">
+    <div id="change-username-container">
+        <h2>修改用户名</h2>
+        <label for="new-username">新用户名:</label>
+        <input type="text" id="new-username" placeholder="输入新的用户名">
+
+        <button onclick="changeUsername()">确认修改</button>
+    </div>
+
+    <div id="change-password-container">
+        <h2>修改密码</h2>
+        <label for="current-password">当前密码:</label>
+        <input type="password" id="current-password" required>
+
+        <label for="new-password">新密码:</label>
+        <input type="password" id="new-password" required>
+
+        <button onclick="changePassword()">确认修改</button>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    function changeUsername() {
+        let newUsername = $('#new-username').val();
+        if (newUsername === '') {
+            alert('请输入新用户名');
+            return;
+        }
+        let url = "/user?method=updateAdminUsername";
+        $.post(
+            url,
+            {
+                "newUsername": newUsername
+            },
+            function (result) {
+                let json = JSON.parse(result);
+                alert(json.mess);
+                if (json.ok == true) {
+                    window.location.href = "editAdminInfo.html";
+                }
+            }
+        )
+    }
+
+    function changePassword() {
+        var currentPassword = $('#current-password').val();
+        var newPassword = $('#new-password').val();
+
+        if (currentPassword === '' || newPassword === '') {
+            alert('当前密码和新密码均不能为空');
+            return;
+        }
+
+        let url = "/user?method=updateAdminPassword";
+        $.post(
+            url,
+            {
+                "currentPassword": currentPassword,
+                "newPassword": newPassword,
+            },
+            function (result) {
+                let json = JSON.parse(result);
+                alert(json.mess);
+                if (json.ok == true) {
+                    window.location.href = "editAdminInfo.html";
+                }
+            }
+        )
+    }
+</script>
+</body>
+</html>

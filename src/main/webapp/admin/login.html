@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .login-btn {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .login-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2>管理员登录</h2>
+    <div class="login-form">
+        <div class="form-group">
+            <label for="username">用户名：</label>
+            <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码：</label>
+            <input type="password" id="password" required>
+        </div>
+        <button id="login-btn" class="login-btn">登录</button>
+    </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('#login-btn').click(function () {
+            let username = $('#username').val();
+            let password = $('#password').val();
+            if (username === '' || password === '') {
+                alert("不能为空!");
+                return;
+            }
+            let url = "/user?method=adminLogin";
+            $.post(
+                url,
+                {
+                    "username": username,
+                    "password": password,
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    if (json.ok == true) {
+                        window.location.href = "/admin/adminHome.html";
+                    } else {
+                        alert(json.mess);
+                    }
+                }
+            )
+        })
+    })
+</script>
+</body>
+</html>

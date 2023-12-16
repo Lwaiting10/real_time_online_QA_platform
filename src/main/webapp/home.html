@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            /*background: linear-gradient(to bottom right, #09203f, #537895);*/
+            /*color: #ffffff;*/
+            /*transition: background 0.5s ease;*/
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to bottom right, #09203f, #537895);
+            color: #fff;
+            text-align: left;
+            padding: 15px;
+            z-index: 1001;
+            transition: background 0.5s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: transparent;
+            padding: 10px 0;
+            z-index: 1000;
+            transition: background 0.5s ease;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-right: 25px;
+            margin-left: 10px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            color: #333;
+        }
+
+        #dynamic-content {
+            width: 100%;
+            height: calc(100vh - 60px);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('./img/img.png') center/cover no-repeat;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        #dynamic-content.active {
+            display: block;
+        }
+
+        .overlay {
+            background: rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+
+        .content {
+            z-index: 1;
+            background: linear-gradient(to bottom, #4a4e69, #2b2e4a); /* 字体颜色渐变 */
+            -webkit-background-clip: text; /* 设置背景裁剪为文字 */
+            color: transparent; /* 隐藏实际文字颜色 */
+            transition: background 0.5s ease;
+        }
+
+        /* 悬停效果 */
+        nav a:hover,
+        nav a:focus {
+            background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .project-name {
+            font-size: 25px;
+        }
+
+        .transparent-button {
+            background: transparent;
+            color: black;
+            font-size: 16px;
+            border: 2px solid #000000;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5%;
+        }
+
+        .transparent-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="project-name">实时在线问答平台</div>
+    <nav>
+        <a href="question.html">主页</a>
+        <a href="addQuestion.html">提问</a>
+        <a href="userInfo.jsp">个人中心</a>
+        <a href="#">关于我们</a>
+    </nav>
+    <!-- 在页面中加入显示用户名和头像的元素 -->
+    <div class="user-info">
+        <div class="dropdown">
+            <span id="username">加载中...</span>
+            <div class="dropdown-content">
+                <a href="userInfo.jsp" class="dropdown-item">个人中心</a>
+                <a href="user?method=logOut" class="dropdown-item">退出登录</a>
+            </div>
+        </div>
+        <img id="user-avatar" class="user-avatar" alt="User Avatar">
+    </div>
+</header>
+
+<div id="dynamic-content" class="overlay">
+    <div id="welcome" class="content">
+        <h1>探索知识的世界</h1>
+        <p>欢迎来到我们的网站，这里汇聚了丰富的知识和有趣的内容。无论您是新手还是专家，都可以在这里找到您感兴趣的话题。</p>
+        <p>我们致力于打造一个互动平台，让您可以提出问题、分享见解，并与社区中的其他成员互动。</p>
+        <p>加入我们的社区，探索知识的无限可能性！</p>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+<script>
+    // 使用jQuery的Ajax来获取用户信息
+    $(document).ready(function () {
+        $.ajax({
+            url: '/user?method=getUserInfo',
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                $('#username').text(data.t.username);
+
+                // 设置头像的 Base64 数据为图片的 src
+                $('#user-avatar').attr('src', 'data:image/jpeg;base64,' + data.t.avatar);
+            },
+            error: function () {
+                console.error('Failed to fetch user information.');
+            }
+        });
+    });
+</script>
+</body>
+</html>

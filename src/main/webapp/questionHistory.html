@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提问历史</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background:url("./img/img.png");
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .question-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .question h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .question-category {
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .question-metadata {
+            color: #777;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .question-time {
+            font-size: 14px;
+        }
+
+        .question-likes {
+            display: flex;
+            align-items: center;
+        }
+
+        .like-icon {
+            margin-right: 5px;
+            color: #e44d26;
+        }
+
+        .question-status {
+            font-size: 14px;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .status-pending {
+            background-color: #ffeeba; /* 浅黄色 */
+        }
+
+        .status-approved {
+            background-color: #d4edda; /* 浅绿色 */
+        }
+
+        .status-rejected {
+            background-color: #f8d7da; /* 浅红色 */
+        }
+
+        .delete-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #dc3545; /* 红色 */
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .back-link {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            text-decoration: none;
+            font-size: 20px;
+            color: white;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>提问历史</h1>
+</header>
+
+<a href="userInfo.jsp" class="back-link">返回个人信息</a>
+
+<div class="question-container"></div>
+
+</body>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script>
+    function confirmDelete(questionId) {
+        if (confirm("确定要删除该问题吗？")) {
+            let url = "/question?method=delete";
+            $.post(
+                url,
+                {
+                    "questionId": questionId
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "/questionHistory.html";
+                    }
+                }
+            )
+        }
+    }
+
+    $(document).ready(function () {
+        // 使用 Ajax 异步请求后端数据
+        $.ajax({
+            url: '/question?method=getUserQuestionHistory',
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                // 处理从后端获取的数据
+                displayQuestions(data);
+            },
+            error: function () {
+                console.error('获取数据失败');
+            }
+        });
+
+        function displayQuestions(questions) {
+            var questionContainer = $('.question-container');
+
+            // 清空问题容器
+            questionContainer.empty();
+
+            // 遍历每个问题并添加到问题容器中
+            questions.forEach(function (question) {
+                var questionElement = createQuestionElement(question);
+                questionContainer.append(questionElement);
+            });
+        }
+
+        function createQuestionElement(question) {
+            return $(`<div class="question">
+                <h3>${question.title}</h3>
+                <div class="question-category">问题分类: ${question.categoryName}</div>
+                <div class="question-metadata">
+                    <div class="question-time">提问时间: ${question.createTime}</div>
+                    <div class="question-likes">
+                        <span class="like-icon">&#x2665;</span>
+                        <span>点赞数: ${question.likes}</span>
+                    </div>
+                    <div class="question-status ${getStatusClass(question.status)}">审核状态: ${getStatusText(question.status)}</div>
+                </div>
+                <button class="delete-button" onclick="confirmDelete('${question.questionId}')">删除</button>
+            </div>`);
+        }
+
+
+        function getStatusClass(status) {
+            // 根据审核状态返回相应的 CSS 类名
+            switch (status) {
+                case '0':
+                    return 'status-pending';
+                case '1':
+                    return 'status-approved';
+                case '2':
+                    return 'status-rejected';
+                default:
+                    return '';
+            }
+        }
+
+        function getStatusText(status) {
+            // 根据审核状态返回相应的文本
+            switch (status) {
+                case '0':
+                    return '待审核';
+                case '1':
+                    return '已通过';
+                case '2':
+                    return '未通过';
+                default:
+                    return '';
+            }
+        }
+    });
+</script>
+</html>

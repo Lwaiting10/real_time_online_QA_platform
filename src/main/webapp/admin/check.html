@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提问审核页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #question-table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #buttons-container {
+            margin-top: 20px;
+        }
+
+        .action-button {
+            cursor: pointer;
+            padding: 5px;
+            margin: 0 5px;
+        }
+        .action-button.active {
+            background-color: skyblue; /* 修改为你想要的活动状态背景颜色 */
+        }
+    </style>
+</head>
+<body>
+<div id="buttons-container">
+    <button id="btnPending" class="action-button" onclick="filterQuestions('0'); setActiveButton('btnPending');">待审核</button>
+    <button id="btnApproved" class="action-button" onclick="filterQuestions('1'); setActiveButton('btnApproved');">已通过</button>
+    <button id="btnRejected" class="action-button" onclick="filterQuestions('2'); setActiveButton('btnRejected');">不通过</button>
+</div>
+<table id="question-table">
+    <thead>
+    <tr>
+        <th>标题</th>
+        <th>内容</th>
+        <th>创建时间</th>
+        <th>提问者</th>
+        <th>分类</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="question-list">
+    <!-- 问题信息将动态插入到这里 -->
+    </tbody>
+</table>
+
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+    $(document).ready(function () {
+        setActiveButton('btnPending');
+        filterQuestions('0'); // 默认加载待审核数据
+    });
+    // 在按钮被点击时添加一个名为 "active" 的样式类
+    function setActiveButton(buttonId) {
+        // 移除所有按钮的活动状态
+        $('.action-button').removeClass('active');
+
+        // 将点击的按钮设置为活动状态
+        $('#' + buttonId).addClass('active');
+    }
+    // 删除问题
+    function deleteQuestion(questionId) {
+        if (confirm("确定要删除该问题吗？")) {
+            let url = "/question?method=delete";
+            $.post(
+                url,
+                {
+                    "questionId": questionId
+                },
+                function (result) {
+                    let json = JSON.parse(result);
+                    alert(json.mess);
+                    if (json.ok == true) {
+                        window.location.href = "check.html";
+                    }
+                }
+            )
+        }
+    }
+
+    // 审核操作
+    function reviewQuestion(questionId, approve) {
+        let url = "/question?method=check";
+        $.post(
+            url,
+            {
+                "questionId": questionId,
+                "approve": approve
+            },
+            function (result) {
+                let json = JSON.parse(result);
+                if (json.ok == true) {
+                    window.location.href = "check.html";
+                } else {
+                    alert(json.mess);
+                }
+            }
+        )
+    }
+    $(document).ready(function () {
+        // 页面加载时默认显示所有提问
+        filterQuestions('0');
+    });
+
+    function filterQuestions(status) {
+        $.ajax({
+            url: `/question?method=getQuestionDTOList&status=${status}`,
+            type: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                displayQuestions(data);
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                console.error('Error fetching question data:', textStatus);
+                console.error('Error details:', errorThrown);
+            }
+        });
+    }
+
+    // 显示问题列表
+    function displayQuestions(questions) {
+        const questionTableBody = $('#question-list');
+        questionTableBody.empty();
+
+        questions.forEach((question) => {
+            const row = `
+                    <tr>
+                        <td>${question.title}</td>
+                        <td>${question.text}</td>
+                        <td>${question.createTime}</td>
+                        <td>${question.username}</td>
+                        <td>${question.categoryName}</td>
+                        <td>
+                            <button class="action-button" onclick="deleteQuestion('${question.questionId}')">删除</button>
+                            ${question.status == '0' ? `<button class="action-button" onclick="reviewQuestion('${question.questionId}', '1')">审核通过</button>
+                                                             <button class="action-button" onclick="reviewQuestion('${question.questionId}', '2')">不通过</button>` : ''}
+                        </td>
+                    </tr>`;
+            questionTableBody.append(row);
+        });
+
+    }
+</script>
+</body>
+</html>
